@@ -1,0 +1,11 @@
+# When this file exists, the EB CLI uses it INSTEAD of .gitignore, and deploys your
+# working folder as-is, including uncommitted changes (no `git archive`).
+node_modules/
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/saved_configs/
+.env
+npm-debug.log*
+lab-markers/
+test/
+.git/

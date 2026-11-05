@@ -1,7 +1,7 @@
 {
-  "name": "beanstalk-ops-dashboard",
+  "name": "beanstalk-lab",
   "version": "1.0.0",
-  "description": "A deployment-ready operations dashboard for AWS Elastic Beanstalk.",
+  "description": "A hands-on test dummy app for learning AWS Elastic Beanstalk.",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

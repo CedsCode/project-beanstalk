@@ -1,4 +1,7 @@
 node_modules/
-.elasticbeanstalk/
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/saved_configs/
 .env
 npm-debug.log*
+lab-markers/

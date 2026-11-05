@@ -1,0 +1,7 @@
+# Lab 15: periodic tasks for a WORKER environment. Copy to the PROJECT ROOT as cron.yaml.
+# The leader worker instance POSTs to the url on this schedule (cron syntax, UTC).
+version: 1
+cron:
+  - name: "lab-heartbeat"
+    url: "/worker/cron"
+    schedule: "*/5 * * * *"

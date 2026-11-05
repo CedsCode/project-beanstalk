@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Beanstalk Lab</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <a class="brand" href="#overview"><span class="brand-mark">B</span><span class="brand-text">beanstalk<span class="accent">lab</span></span></a>
+        <nav aria-label="Main navigation">
+          <a class="nav-link" data-view="overview" href="#overview"><span class="ico">◈</span><span class="lbl">Overview</span></a>
+          <a class="nav-link" data-view="chaos" href="#chaos"><span class="ico">⚡</span><span class="lbl">Chaos lab</span></a>
+          <a class="nav-link" data-view="watch" href="#watch"><span class="ico">◉</span><span class="lbl">Deploy watcher</span></a>
+          <a class="nav-link" data-view="backend" href="#backend"><span class="ico">⇄</span><span class="lbl">Worker &amp; DB</span></a>
+          <a class="nav-link" data-view="labs" href="#labs"><span class="ico">✎</span><span class="lbl">Labs</span><span class="badge" id="labs-progress-badge"></span></a>
+        </nav>
+        <div class="sidebar-footer" id="where"><span class="dot"></span><span>Connecting…</span></div>
+      </aside>
+
+      <main class="content">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow" id="eyebrow">BEANSTALK LAB</p>
+            <h1 id="view-title">Overview</h1>
+            <p class="subtitle" id="view-subtitle"></p>
+          </div>
+          <div class="header-actions">
+            <span class="chip" id="chip">…</span>
+            <button id="refresh" class="icon-button" title="Refresh" aria-label="Refresh">↻</button>
+          </div>
+        </header>
+
+        <!-- OVERVIEW -->
+        <section class="view" id="view-overview"><div id="overview"><p class="muted">Loading…</p></div></section>
+
+        <!-- CHAOS -->
+        <section class="view" id="view-chaos" hidden>
+          <div class="callout">
+            Every chaos action hits <b>only the instance that served the request</b>. Behind a load balancer, that's whichever
+            instance the LB picked. Each result shows which instance it was.
+            <label class="inline">Lab key <input id="lab-key" type="password" placeholder="only if LAB_KEY is set" autocomplete="off" /></label>
+          </div>
+          <div class="grid cards">
+            <article class="card">
+              <h3>Health check</h3>
+              <p class="hint">Changes what <code>/api/health</code> returns. The load balancer uses it to decide whether this instance gets traffic.</p>
+              <label>Auto-revert after <input id="health-revert" type="number" min="0" max="60" value="3" /> min (0 = never)</label>
+              <div class="btns">
+                <button data-action="health-ok" class="good">Healthy</button>
+                <button data-action="health-fail" class="bad">Fail (503)</button>
+                <button data-action="health-slow" class="warn">Slow (10 s)</button>
+              </div>
+            </article>
+            <article class="card">
+              <h3>5xx errors</h3>
+              <p class="hint">Fires requests that return HTTP 500. Enhanced health turns Degraded or Severe as the error rate climbs.</p>
+              <label>Requests <input id="error-count" type="number" min="1" max="1000" value="100" /></label>
+              <div class="btns"><button data-action="errors" class="bad">Fire errors</button></div>
+            </article>
+            <article class="card">
+              <h3>Slow responses</h3>
+              <p class="hint">nginx gives up after 60 s and returns 504. Try 65000.</p>
+              <label>Delay (ms) <input id="slow-ms" type="number" min="0" max="120000" value="5000" /></label>
+              <div class="btns"><button data-action="slow" class="warn">Send slow request</button></div>
+            </article>
+            <article class="card">
+              <h3>CPU burn</h3>
+              <p class="hint">Keeps CPU cores busy so Auto Scaling has a reason to add instances (Lab 8).</p>
+              <label>Cores <input id="cpu-cores" type="number" min="1" max="64" value="2" /></label>
+              <label>Seconds <input id="cpu-seconds" type="number" min="1" max="900" value="600" /></label>
+              <div class="btns"><button data-action="cpu" class="warn">Burn CPU</button><button data-action="cpu-stop">Stop</button></div>
+            </article>
+            <article class="card">
+              <h3>Memory leak</h3>
+              <p class="hint">Holds memory until released. Keep going on a t3.micro (1 GB) and the Linux OOM killer ends the process.</p>
+              <label>MB per click <input id="memory-mb" type="number" min="1" max="512" value="128" /></label>
+              <div class="btns"><button data-action="memory" class="warn">Allocate</button><button data-action="memory-release">Release</button></div>
+            </article>
+            <article class="card">
+              <h3>Freeze the event loop</h3>
+              <p class="hint">Node can't answer anything, health checks included. Watch nginx return 502 or 504.</p>
+              <label>Seconds <input id="block-seconds" type="number" min="1" max="120" value="20" /></label>
+              <div class="btns"><button data-action="block" class="bad">Freeze</button></div>
+            </article>
+            <article class="card">
+              <h3>Crash the process</h3>
+              <p class="hint">Exits with code 1. Beanstalk's process manager restarts it. The PID and uptime on Overview reset.</p>
+              <div class="btns"><button data-action="crash" class="bad">Crash now</button></div>
+            </article>
+            <article class="card">
+              <h3>Write a log line</h3>
+              <p class="hint">Find it with <code>eb logs</code> or in CloudWatch Logs (Lab 4).</p>
+              <label>Level <select id="log-level"><option>info</option><option>warn</option><option>error</option></select></label>
+              <label>Message <input id="log-message" value="Hello from the Beanstalk lab" /></label>
+              <div class="btns"><button data-action="log">Write log</button></div>
+            </article>
+          </div>
+          <article class="card">
+            <div class="card-head"><h3>Results</h3><button class="small" data-action="clear-log">Clear</button></div>
+            <div id="chaos-log" class="log"><p class="muted">Nothing yet.</p></div>
+          </article>
+        </section>
+
+        <!-- WATCH -->
+        <section class="view" id="view-watch" hidden>
+          <div class="callout">
+            Start this <b>before</b> you run <code>eb deploy</code>, <code>eb swap</code> or <code>eb scale</code>. Each square is one
+            request: its colour shows which version answered it, and red means it failed. In the second strip, colour shows which instance answered.
+          </div>
+          <article class="card">
+            <div class="card-head">
+              <div class="btns">
+                <button id="watch-toggle" class="good">Start watching</button>
+                <button id="watch-clear">Clear</button>
+              </div>
+              <label class="inline">Every <select id="watch-interval"><option value="250">250 ms</option><option value="500">500 ms</option><option value="1000" selected>1 s</option><option value="2000">2 s</option><option value="5000">5 s</option></select></label>
+            </div>
+            <h4>By version</h4><div class="strip" id="strip-version"></div>
+            <h4>By instance</h4><div class="strip" id="strip-instance"></div>
+            <div id="watch-summary" class="grid two"></div>
+            <div id="watch-table"></div>
+          </article>
+        </section>
+
+        <!-- BACKEND -->
+        <section class="view" id="view-backend" hidden>
+          <div class="grid two">
+            <article class="card">
+              <h3>Database connectivity</h3>
+              <p class="hint">Opens a TCP connection to <code>RDS_HOSTNAME</code>/<code>RDS_PORT</code> (an RDS database attached to the environment) or <code>DB_HOST</code>/<code>DB_PORT</code> (your own properties). A timeout almost always means a security group problem.</p>
+              <div class="btns"><button id="db-check" class="good">Check database</button></div>
+              <div id="db-result"></div>
+            </article>
+            <article class="card">
+              <h3>Simulate an SQS message</h3>
+              <p class="hint">In a worker environment, the SQS daemon POSTs each message to this app. This button sends the same kind of request from your browser so you can try it locally. Include <code>FAIL</code> in the body to get a 500, which makes SQS retry.</p>
+              <label>Body <input id="task-body" value='{"job":"resize-image","id":42}' /></label>
+              <div class="btns"><button id="task-send">POST /worker/task</button></div>
+            </article>
+          </div>
+          <article class="card">
+            <div class="card-head"><h3>Tasks received by this instance</h3><button class="small" id="tasks-refresh">Refresh</button></div>
+            <div id="tasks"></div>
+          </article>
+        </section>
+
+        <!-- LABS -->
+        <section class="view" id="view-labs" hidden>
+          <div class="callout warn">
+            <b>Costs money.</b> One t3.micro instance is small or free-tier. A load balancer (from Lab 7 on) costs roughly
+            $0.6 a day. RDS and NAT gateways cost more. Run <code>eb terminate</code> when you finish a session and set an AWS Budget alert.
+          </div>
+          <div class="progress"><div id="labs-progress-bar"></div></div>
+          <div id="labs"></div>
+        </section>
+      </main>
+    </div>
+    <script src="/labs.js"></script>
+    <script src="/app.js"></script>
+  </body>
+</html>

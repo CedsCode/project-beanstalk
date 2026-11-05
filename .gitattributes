@@ -1,0 +1,8 @@
+# Shell scripts and Beanstalk configs must use LF line endings or they fail on Linux
+# ("bad interpreter: /bin/bash^M").
+*.sh     text eol=lf
+*.config text eol=lf
+*.conf   text eol=lf
+*.yaml   text eol=lf
+*.yml    text eol=lf
+Procfile text eol=lf
