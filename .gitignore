@@ -1,0 +1,4 @@
+node_modules/
+.elasticbeanstalk/
+.env
+npm-debug.log*
